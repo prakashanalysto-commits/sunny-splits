@@ -116,6 +116,13 @@
   .center{text-align:center}
   .mt0{margin-top:0}
   .divider{text-align:center;color:var(--muted);font-size:12px;font-weight:700;margin:4px 0 4px;letter-spacing:1px}
+  details.help summary{font-size:15px;font-weight:800;cursor:pointer;list-style:none;outline:none}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help summary::after{content:"\25BE";float:right;color:var(--muted);transition:.2s}
+  details.help[open] summary::after{transform:rotate(180deg)}
+  .help-body{margin-top:12px}
+  .help-body p{font-size:13.5px;line-height:1.55;margin-bottom:10px;color:var(--ink)}
+  .help-body p:last-child{margin-bottom:0}
 
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;transition:.3s;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -162,6 +169,17 @@
       <input id="joinName" placeholder="e.g. Priya" maxlength="20">
       <button class="btn btn-ghost" id="btnJoin" onclick="joinTrip()">Join trip 🤝</button>
     </div>
+
+    <details class="card help">
+      <summary>❓ How it works</summary>
+      <div class="help-body">
+        <p><b>🌴 Start a trip</b> (one person): name it, pick the country (currency sets itself, ₹ for India), add your name. Then tap the dashed <b>code chip</b> and paste the invite in your group chat.</p>
+        <p><b>🎟️ Join</b> (everyone else): open the invite link or enter the 6-letter code, type your name. You'll see the group, total and every expense, live.</p>
+        <p><b>✍️ During the trip:</b> anyone adds expenses, even a small chai. Everything updates on all phones instantly (green <b>live</b> dot = connected). Wrong entry? Tap 🗑️. Friend without a phone? Use <b>+ person</b>.</p>
+        <p><b>🏁 When it ends:</b> tap End trip (ends for the whole group). You get each person's share, who pays whom with the fewest transfers, where the money went, plus trip insights. Tap <b>✨ Ask AI</b> for tips to spend less in that country.</p>
+        <p><b>🗺️ Past Trips</b> tab keeps finished trips, tap any for the full breakdown.</p>
+      </div>
+    </details>
   </div>
 
   <!-- ============ TRIP SCREEN ============ -->
