@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunny Splits · Trip Expenses, Together</title>
+<meta name="description" content="Split trip expenses with your group, live. Minimal, happy, free.">
+<style>
+  :root{
+    --bg:#FFF9F0; --card:#FFFFFF; --ink:#3D3229; --muted:#9B8E80;
+    --sun:#FFB84C; --coral:#FF7B54; --mint:#7ED8B2; --sky:#8EC9E8;
+    --soft:#FFF1DC; --line:#F3E8D8; --danger:#E85D5D;
+    --radius:20px; --shadow:0 4px 18px rgba(255,155,80,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  body{background:var(--bg);color:var(--ink);min-height:100vh}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px 90px}
+  header{text-align:center;padding:18px 0 10px;position:relative}
+  header h1{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  header h1 span{color:var(--coral)}
+  header p{color:var(--muted);font-size:13px;margin-top:3px}
+  .live-pill{position:absolute;right:0;top:22px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--muted)}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#D9C8B4}
+  .live-pill.on{color:#2E9E6B}
+  .live-pill.on .live-dot{background:#2E9E6B;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,158,107,.4)}70%{box-shadow:0 0 0 7px rgba(46,158,107,0)}100%{box-shadow:0 0 0 0 rgba(46,158,107,0)}}
+
+  .tabs{display:flex;background:var(--soft);border-radius:16px;padding:5px;margin-bottom:18px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:12px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;transition:.2s;border:none;background:transparent}
+  .tab.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+
+  .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--line)}
+  .card h2{font-size:16px;font-weight:800;margin-bottom:12px}
+  .card h2 small{color:var(--muted);font-weight:600;font-size:12px}
+
+  label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
+  input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:15px;background:#FFFDFA;color:var(--ink);outline:none;transition:.2s}
+  input:focus,select:focus{border-color:var(--sun)}
+  .row{display:flex;gap:10px}.row>*{flex:1}
+
+  .btn{width:100%;padding:14px;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;transition:.15s;margin-top:14px}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.55;cursor:wait}
+  .btn-sun{background:linear-gradient(135deg,var(--sun),var(--coral));color:#fff;box-shadow:0 6px 16px rgba(255,123,84,.3)}
+  .btn-ghost{background:var(--soft);color:var(--ink)}
+  .btn-danger{background:#FFECEC;color:var(--danger)}
+  .btn-sm{width:auto;padding:8px 14px;font-size:13px;margin-top:0;border-radius:12px}
+
+  .code-chip{display:inline-flex;align-items:center;gap:8px;background:#FFF;border:1.5px dashed var(--coral);color:var(--coral);padding:8px 16px;border-radius:999px;font-weight:800;font-size:16px;letter-spacing:3px;cursor:pointer;margin-top:10px}
+  .code-chip small{letter-spacing:0;font-size:11px;font-weight:700}
+
+  .hero{background:linear-gradient(135deg,#FFE3B3,#FFD1C1);border:none;text-align:center;padding:22px 18px}
+  .hero .place{font-size:13px;font-weight:700;color:#A96A2F;text-transform:uppercase;letter-spacing:1px}
+  .hero .amount{font-size:38px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}
+  .hero .sub{font-size:13px;color:#8A6A45;font-weight:600}
+
+  .members-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 6px}
+  .m-badge{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:58px}
+  .m-badge .avatar{width:44px;height:44px}
+  .m-badge .mn{font-size:11px;font-weight:700;max-width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .m-badge .mp{font-size:10px;color:var(--muted);font-weight:700}
+  .m-badge.me .avatar{outline:3px solid var(--sun);outline-offset:2px}
+
+  .cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+  .cat{padding:10px 6px;border:1.5px solid var(--line);border-radius:14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:#FFFDFA;transition:.15s}
+  .cat .em{font-size:20px;display:block;margin-bottom:3px}
+  .cat.sel{border-color:var(--sun);background:var(--soft)}
+
+  .exp{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px dashed var(--line)}
+  .exp:last-child{border-bottom:none}
+  .exp .em{font-size:22px;width:38px;height:38px;background:var(--soft);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .exp .info{flex:1;min-width:0}
+  .exp .t{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .exp .s{font-size:12px;color:var(--muted)}
+  .exp .amt{font-weight:800;font-size:14px;white-space:nowrap}
+  .exp .del{border:none;background:none;color:#D9C8B4;font-size:16px;cursor:pointer;padding:4px}
+
+  .bar-row{margin-bottom:12px}
+  .bar-top{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:5px}
+  .bar-top .pc{color:var(--muted);font-weight:600}
+  .bar{height:10px;background:var(--soft);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px;transition:width .6s ease}
+
+  .person{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px dashed var(--line)}
+  .person:last-child{border-bottom:none}
+  .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;flex-shrink:0}
+  .person .info{flex:1}
+  .person .n{font-weight:700;font-size:14px}
+  .person .d{font-size:12px;color:var(--muted)}
+  .badge{font-size:12px;font-weight:800;padding:5px 10px;border-radius:99px}
+  .badge.get{background:#E4F7EE;color:#2E9E6B}
+  .badge.owe{background:#FFECEC;color:var(--danger)}
+  .badge.even{background:var(--soft);color:var(--muted)}
+
+  .settle{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:14px;padding:11px 14px;margin-bottom:8px;font-size:14px;font-weight:600}
+  .settle b{font-weight:800}
+  .settle .arr{color:var(--coral)}
+
+  .insight{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:13.5px;line-height:1.45}
+  .insight .em{font-size:18px}
+  .ai-box{background:linear-gradient(135deg,#FDF3FF,#FFF3E8);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+
+  .trip-item{cursor:pointer;transition:.15s}
+  .trip-item:active{transform:scale(.98)}
+  .trip-head{display:flex;justify-content:space-between;align-items:center}
+  .trip-head .n{font-weight:800;font-size:15px}
+  .trip-head .a{font-weight:800;color:var(--coral)}
+  .trip-sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .empty{text-align:center;padding:36px 20px;color:var(--muted)}
+  .empty .em{font-size:46px;display:block;margin-bottom:10px}
+  .empty p{font-size:14px;line-height:1.5}
+
+  .back{border:none;background:none;color:var(--coral);font-weight:800;font-size:14px;cursor:pointer;padding:0 0 12px;display:inline-flex;align-items:center;gap:4px}
+  .hide{display:none!important}
+  .center{text-align:center}
+  .mt0{margin-top:0}
+  .divider{text-align:center;color:var(--muted);font-size:12px;font-weight:700;margin:4px 0 4px;letter-spacing:1px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;transition:.3s;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .spin{display:inline-block;width:14px;height:14px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Sunny <span>Splits</span> ☀️</h1>
+    <p>happy trips, fair splits, together</p>
+    <div class="live-pill" id="livePill"><span class="live-dot"></span><span id="liveTxt">offline</span></div>
+  </header>
+
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" id="tabCurrent" onclick="switchTab('current')">My Trips</button>
+    <button class="tab" id="tabPast" onclick="switchTab('past')">Past Trips</button>
+  </div>
+
+  <!-- ============ HOME / MY TRIPS ============ -->
+  <div id="viewHome">
+    <div id="homeTrips"></div>
+
+    <div class="card">
+      <h2>🌴 Start a new trip</h2>
+      <label>Trip name</label>
+      <input id="tripName" placeholder="Goa Getaway" maxlength="40">
+      <label>Country</label>
+      <select id="tripCountry"></select>
+      <label>Your name</label>
+      <input id="creatorName" placeholder="e.g. Prakash" maxlength="20">
+      <button class="btn btn-sun" id="btnCreate" onclick="createTrip()">Create trip &amp; get share code 🚀</button>
+    </div>
+
+    <div class="divider">OR</div>
+
+    <div class="card">
+      <h2>🎟️ Join a friend's trip</h2>
+      <div class="row">
+        <input id="joinCode" placeholder="Trip code e.g. K7PMQ2" maxlength="6" style="text-transform:uppercase;letter-spacing:2px">
+      </div>
+      <label>Your name</label>
+      <input id="joinName" placeholder="e.g. Priya" maxlength="20">
+      <button class="btn btn-ghost" id="btnJoin" onclick="joinTrip()">Join trip 🤝</button>
+    </div>
+  </div>
+
+  <!-- ============ TRIP SCREEN ============ -->
+  <div id="viewTrip" class="hide">
+    <button class="back" onclick="closeTrip()">← My trips</button>
+    <div id="tripBody"></div>
+  </div>
+
+  <!-- ============ PAST TRIPS ============ -->
+  <div id="viewPast" class="hide">
+    <div id="pastList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+<script src="https://js.puter.com/v2/"></script>
+<script>
+/* ================= constants ================= */
+const COUNTRIES = [
+  ["India","INR","₹"],["United States","USD","$"],["United Kingdom","GBP","£"],
+  ["Eurozone (France, Germany, Italy, Spain…)","EUR","€"],["Japan","JPY","¥"],
+  ["Thailand","THB","฿"],["Indonesia (Bali)","IDR","Rp"],["Singapore","SGD","S$"],
+  ["Malaysia","MYR","RM"],["Vietnam","VND","₫"],["Sri Lanka","LKR","Rs"],
+  ["Nepal","NPR","रू"],["UAE (Dubai)","AED","د.إ"],["Saudi Arabia","SAR","﷼"],
+  ["Qatar","QAR","﷼"],["Australia","AUD","A$"],["New Zealand","NZD","NZ$"],
+  ["Canada","CAD","C$"],["Switzerland","CHF","CHF"],["China","CNY","¥"],
+  ["Hong Kong","HKD","HK$"],["South Korea","KRW","₩"],["Turkey","TRY","₺"],
+  ["Egypt","EGP","E£"],["South Africa","ZAR","R"],["Brazil","BRL","R$"],
+  ["Mexico","MXN","Mex$"],["Russia","RUB","₽"],["Maldives","MVR","Rf"],
+  ["Mauritius","MUR","₨"],["Philippines","PHP","₱"],["Cambodia","KHR","៛"],
+  ["Bhutan","BTN","Nu."],["Bangladesh","BDT","৳"],["Pakistan","PKR","₨"],
+  ["Kenya","KES","KSh"],["Morocco","MAD","DH"],["Israel","ILS","₪"],
+  ["Norway","NOK","kr"],["Sweden","SEK","kr"],["Denmark","DKK","kr"],
+  ["Other","USD","$"]
+];
+const CATS = [["Food","🍜"],["Stay","🏨"],["Travel","🚕"],["Shopping","🛍️"],["Fun","🎉"],["Other","✨"]];
+const AVATAR_COLORS = ["#FF7B54","#FFB84C","#7ED8B2","#8EC9E8","#C39BD3","#F1948A","#76D7C4","#F7B7A3"];
+const RELAYS = [
+  "https://gun-manhattan.herokuapp.com/gun",
+  "https://peer.wallie.io/gun"
+];
+const NS = "sunnysplits26_";
+const MYKEY = "ss26_my";
+
+/* ================= gun setup ================= */
+const gun = Gun({peers: RELAYS, localStorage: true});
+let online = false;
+gun.on("hi", ()=>{ online = true; setLive(true); });
+gun.on("bye", ()=>{ online = false; setLive(false); });
+function setLive(on){
+  document.getElementById("livePill").classList.toggle("on", on);
+  document.getElementById("liveTxt").textContent = on ? "live" : "offline";
+}
+
+/* ================= local identity ================= */
+function myData(){
+  try{ return JSON.parse(localStorage.getItem(MYKEY)) || {trips:{}}; }
+  catch(e){ return {trips:{}}; }
+}
+function saveMy(d){ localStorage.setItem(MYKEY, JSON.stringify(d)); }
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+function fmt(n, sym){
+  const opts = Math.abs(n) >= 1000 ? {maximumFractionDigits:0} : {maximumFractionDigits:2};
+  return sym + (+n).toLocaleString("en-IN", opts);
+}
+function avatarColor(i){ return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
+function initials(n){ return (n||"?").trim().slice(0,2).toUpperCase(); }
+function esc(s){ const d=document.createElement("div"); d.textContent=s==null?"":s; return d.innerHTML; }
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function catEmoji(c){ const f = CATS.find(x=>x[0]===c); return f ? f[1] : "✨"; }
+function genCode(){
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let c = ""; const buf = new Uint32Array(6); crypto.getRandomValues(buf);
+  for(let i=0;i<6;i++) c += chars[buf[i]%chars.length];
+  return c;
+}
+function slug(n){ return n.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,24) || ("m"+Date.now()); }
+function dayCount(meta){
+  const end = meta.endedAt || Date.now();
+  return Math.max(1, Math.ceil((end - meta.createdAt) / 86400000));
+}
+
+/* ================= trip cache & subscription ================= */
+let T = null;          // {code, meta, members:{}, exp:{}}
+let selCat = "Food";
+let renderTimer = null;
+let listCache = {};    // code -> brief
+
+function scheduleRender(){
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(()=>{ if(T) renderTrip(); }, 160);
+}
+
+function openTrip(code){
+  code = code.toUpperCase();
+  T = {code, meta:null, members:{}, exp:{}};
+  const root = gun.get(NS + code);
+  root.get("meta").on(m=>{
+    if(!m || !T || T.code!==code) return;
+    T.meta = Object.assign({}, T.meta, m);
+    scheduleRender();
+  });
+  root.get("members").map().on((m,k)=>{
+    if(!T || T.code!==code) return;
+    if(m && m.name) T.members[k] = Object.assign({}, m);
+    scheduleRender();
+  });
+  root.get("exp").map().on((e,k)=>{
+    if(!T || T.code!==code) return;
+    if(e) T.exp[k] = Object.assign({}, T.exp[k], e);
+    scheduleRender();
+  });
+  $("viewHome").classList.add("hide");
+  $("viewPast").classList.add("hide");
+  $("mainTabs").classList.add("hide");
+  $("viewTrip").classList.remove("hide");
+  $("tripBody").innerHTML = `<div class="empty"><span class="em">🛰️</span><p>Syncing trip <b>${esc(code)}</b>…</p></div>`;
+  setTimeout(()=>{ if(T && T.code===code && !T.meta) $("tripBody").innerHTML =
+    `<div class="empty"><span class="em">🌫️</span><p>Can't find this trip yet.<br>Check the code, or check your internet connection.</p></div>`; }, 7000);
+}
+function closeTrip(){
+  T = null;
+  $("viewTrip").classList.add("hide");
+  $("mainTabs").classList.remove("hide");
+  switchTab("current");
+}
+
+/* ================= create / join ================= */
+function createTrip(){
+  const name = $("tripName").value.trim();
+  const me = $("creatorName").value.trim();
+  if(!name){ toast("Give your trip a name 🌍"); return; }
+  if(!me){ toast("Add your name 🙋"); return; }
+  const c = COUNTRIES[+$("tripCountry").value];
+  const code = genCode();
+  const root = gun.get(NS + code);
+  root.get("meta").put({
+    name, country: c[0], ccode: c[1], sym: c[2], code,
+    createdAt: Date.now(), endedAt: 0, createdBy: me
+  });
+  root.get("members").get(slug(me)).put({name: me, at: Date.now()});
+  const my = myData();
+  my.trips[code] = {myName: me, joined: Date.now()};
+  saveMy(my);
+  $("tripName").value = ""; $("creatorName").value = "";
+  openTrip(code);
+  toast("Trip created! Share code " + code + " 🎉");
+}
+
+function joinTrip(){
+  const code = $("joinCode").value.trim().toUpperCase();
+  const me = $("joinName").value.trim();
+  if(code.length !== 6){ toast("Enter the 6-character trip code"); return; }
+  if(!me){ toast("Add your name 🙋"); return; }
+  $("btnJoin").disabled = true;
+  let done = false;
+  const root = gun.get(NS + code);
+  const finish = found=>{
+    if(done) return; done = true;
+    $("btnJoin").disabled = false;
+    if(!found){ toast("Trip not found. Check the code & internet 🌫️"); return; }
+    root.get("members").get(slug(me)).put({name: me, at: Date.now()});
+    const my = myData();
+    my.trips[code] = {myName: me, joined: Date.now()};
+    saveMy(my);
+    $("joinCode").value=""; $("joinName").value="";
+    openTrip(code);
+    toast("You're in! Welcome aboard 🤝");
+  };
+  root.get("meta").once(m=>{ if(m && m.name) finish(true); });
+  setTimeout(()=>finish(false), 8000);
+}
+
+/* ================= expenses ================= */
+function liveExpenses(){
+  return Object.entries(T.exp)
+    .filter(([id,e])=>e && !e.del && e.amt>0)
+    .map(([id,e])=>({id, ...e}))
+    .sort((a,b)=>b.at-a.at);
+}
+function addExpense(){
+  if(!T || !T.meta) return;
+  const amt = parseFloat($("expAmount").value);
+  if(!amt || amt <= 0){ toast("Enter an amount 💰"); return; }
+  const note = $("expNote").value.trim() || selCat;
+  const payer = $("expPayer").value;
+  const my = myData();
+  const id = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now()+"_"+Math.random()).toString().replace(/[^a-z0-9_]/gi,"");
+  gun.get(NS + T.code).get("exp").get(id).put({
+    amt: Math.round(amt*100)/100, note, cat: selCat, payer,
+    by: (my.trips[T.code]||{}).myName || payer, at: Date.now(), del: 0
+  });
+  $("expAmount").value=""; $("expNote").value="";
+  toast("Added " + fmt(amt, T.meta.sym) + " ✅");
+}
+function delExpense(id){
+  if(!T) return;
+  gun.get(NS + T.code).get("exp").get(id).put({del: 1});
+}
+function addMemberManual(){
+  if(!T) return;
+  const name = prompt("Traveller's name (someone not using the app):");
+  if(!name || !name.trim()) return;
+  gun.get(NS + T.code).get("members").get(slug(name)).put({name: name.trim(), at: Date.now(), manual: 1});
+}
+function endTrip(){
+  if(!T || !T.meta) return;
+  if(liveExpenses().length===0){ toast("No expenses yet, add some first!"); return; }
+  if(!confirm('End "' + T.meta.name + '" for the whole group and calculate everyone\'s share?')) return;
+  gun.get(NS + T.code).get("meta").put({endedAt: Date.now()});
+  toast("Trip wrapped up for everyone! 🏁");
+}
+function pickCat(c){
+  selCat = c;
+  document.querySelectorAll(".cat").forEach(el=>el.classList.toggle("sel", el.dataset.c===c));
+}
+function copyCode(){
+  if(!T || !T.meta) return;
+  const link = location.origin + location.pathname + "?join=" + T.code;
+  const txt = 'Join my trip "' + T.meta.name + '" on Sunny Splits ☀️\nCode: ' + T.code + '\n' + link;
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(()=>toast("Invite copied! Paste it in WhatsApp 📋"))
+    .catch(()=>toast("Code: " + T.code));
+}
+
+/* ================= math ================= */
+function calc(members, expenses){
+  const total = expenses.reduce((s,e)=>s+e.amt, 0);
+  const paid = {};
+  Object.values(members).forEach(m=>{ paid[m.name]=0; });
+  expenses.forEach(e=>{ paid[e.payer] = (paid[e.payer]||0) + e.amt; });
+  const allNames = Object.keys(paid);
+  const share = allNames.length ? total / allNames.length : 0;
+  const balances = allNames.map(n=>({name:n, paid:paid[n], bal:paid[n]-share}));
+  const debtors = balances.filter(b=>b.bal < -0.01).map(b=>({n:b.name, v:-b.bal})).sort((a,b)=>b.v-a.v);
+  const creditors = balances.filter(b=>b.bal > 0.01).map(b=>({n:b.name, v:b.bal})).sort((a,b)=>b.v-a.v);
+  const settlements = [];
+  let i=0, j=0;
+  while(i<debtors.length && j<creditors.length){
+    const pay = Math.min(debtors[i].v, creditors[j].v);
+    settlements.push({from:debtors[i].n, to:creditors[j].n, amt:pay});
+    debtors[i].v -= pay; creditors[j].v -= pay;
+    if(debtors[i].v < 0.01) i++;
+    if(creditors[j].v < 0.01) j++;
+  }
+  const cats = {};
+  expenses.forEach(e=>{ cats[e.cat]=(cats[e.cat]||0)+e.amt; });
+  const catArr = Object.entries(cats).map(([c,v])=>({cat:c, v, pc: total? v/total*100 : 0})).sort((a,b)=>b.v-a.v);
+  return {total, share, balances, settlements, catArr, count: allNames.length};
+}
+
+/* ================= trip rendering ================= */
+function renderTrip(){
+  if(!T || !T.meta) return;
+  const m = T.meta;
+  const expenses = liveExpenses();
+  const {total, balances} = calc(T.members, expenses);
+  const my = myData();
+  const myName = (my.trips[T.code]||{}).myName;
+
+  if(m.endedAt){ $("tripBody").innerHTML = summaryHTML(m, T.members, expenses); return; }
+
+  const memArr = Object.values(T.members).sort((a,b)=>a.at-b.at);
+  const paidBy = {}; balances.forEach(b=>paidBy[b.name]=b.paid);
+
+  const amountKeep = $("expAmount") ? $("expAmount").value : "";
+  const noteKeep = $("expNote") ? $("expNote").value : "";
+  const payerKeep = $("expPayer") ? $("expPayer").value : myName;
+
+  $("tripBody").innerHTML = `
+    <div class="card hero">
+      <div class="place">${esc(m.name)} · ${esc(m.country)}</div>
+      <div class="amount">${fmt(total, m.sym)}</div>
+      <div class="sub">${memArr.length} travellers · ${fmt(memArr.length? total/memArr.length:0, m.sym)} per head so far</div>
+      <div class="code-chip" onclick="copyCode()">${esc(T.code)} <small>tap to copy invite</small></div>
+    </div>
+
+    <div class="card">
+      <h2>👥 The group <small>— updates live for everyone</small>
+        <button class="btn btn-ghost btn-sm" style="float:right" onclick="addMemberManual()">+ person</button></h2>
+      <div class="members-strip">
+        ${memArr.map((mm,i)=>`
+          <div class="m-badge${mm.name===myName?' me':''}">
+            <div class="avatar" style="background:${avatarColor(i)}">${initials(mm.name)}</div>
+            <div class="mn">${esc(mm.name)}${mm.name===myName?" (you)":""}</div>
+            <div class="mp">${fmt(paidBy[mm.name]||0, m.sym)}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>✍️ Add expense <small>— every chai counts!</small></h2>
+      <div class="row">
+        <div>
+          <label>Amount (${esc(m.sym)})</label>
+          <input id="expAmount" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+        </div>
+        <div>
+          <label>Paid by</label>
+          <select id="expPayer">${memArr.map(mm=>`<option${mm.name===payerKeep?" selected":""}>${esc(mm.name)}</option>`).join("")}</select>
+        </div>
+      </div>
+      <label>What was it?</label>
+      <input id="expNote" placeholder="Beach shack lunch" maxlength="50" onkeydown="if(event.key==='Enter')addExpense()">
+      <label>Category</label>
+      <div class="cats">${CATS.map(c=>`<button class="cat${c[0]===selCat?" sel":""}" data-c="${c[0]}" onclick="pickCat('${c[0]}')"><span class="em">${c[1]}</span>${c[0]}</button>`).join("")}</div>
+      <button class="btn btn-sun" onclick="addExpense()">Add it ➕</button>
+    </div>
+
+    <div class="card">
+      <h2>🧾 Expenses <small>— ${expenses.length} so far</small></h2>
+      ${expenses.length===0
+        ? `<div class="empty" style="padding:22px"><span class="em">🌤️</span><p>Nothing yet.<br>Add your first expense above!</p></div>`
+        : expenses.map(e=>{
+            const d = new Date(e.at);
+            return `<div class="exp">
+              <div class="em">${catEmoji(e.cat)}</div>
+              <div class="info">
+                <div class="t">${esc(e.note)}</div>
+                <div class="s">${esc(e.payer)} · ${d.toLocaleDateString("en-IN",{day:"numeric",month:"short"})} ${d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}</div>
+              </div>
+              <div class="amt">${fmt(e.amt, m.sym)}</div>
+              <button class="del" onclick="delExpense('${e.id}')">🗑️</button>
+            </div>`;
+          }).join("")}
+    </div>
+
+    <button class="btn btn-danger" onclick="endTrip()">🏁 End trip &amp; see the split</button>`;
+  if(amountKeep && $("expAmount")) $("expAmount").value = amountKeep;
+  if(noteKeep && $("expNote")) $("expNote").value = noteKeep;
+}
+
+/* ================= summary + insights ================= */
+function summaryHTML(meta, members, expenses){
+  const {total, share, balances, settlements, catArr, count} = calc(members, expenses);
+  const days = dayCount(meta);
+  const barColors = ["#FF7B54","#FFB84C","#7ED8B2","#8EC9E8","#C39BD3","#F1948A"];
+  const sym = meta.sym;
+
+  const insights = [];
+  if(catArr.length){
+    const top = catArr[0];
+    insights.push(`${catEmoji(top.cat)} <b>${top.cat}</b> was the biggest spend: <b>${fmt(top.v,sym)}</b> (${top.pc.toFixed(0)}% of the trip). ${top.pc>50?"That's where the money went! 👀":""}`);
+  }
+  const biggest = expenses.slice().sort((a,b)=>b.amt-a.amt)[0];
+  if(biggest) insights.push(`💸 Single biggest expense: <b>${esc(biggest.note)}</b> at <b>${fmt(biggest.amt,sym)}</b>, paid by ${esc(biggest.payer)}.`);
+  insights.push(`📅 Over ${days} day${days>1?"s":""}, the group averaged <b>${fmt(total/days,sym)}/day</b> (${fmt(count? total/days/count:0,sym)} per person per day).`);
+  const topPayer = balances.slice().sort((a,b)=>b.paid-a.paid)[0];
+  if(topPayer && topPayer.paid>0 && total>0) insights.push(`🏆 <b>${esc(topPayer.name)}</b> was the MVP wallet, paying <b>${fmt(topPayer.paid,sym)}</b> (${(topPayer.paid/total*100).toFixed(0)}% of everything).`);
+
+  return `
+    <div class="card hero">
+      <div class="place">${esc(meta.name)} · ${esc(meta.country)} · wrapped 🎉</div>
+      <div class="amount">${fmt(total, sym)}</div>
+      <div class="sub">${count} travellers · ${days} day${days>1?"s":""} · ${expenses.length} expenses</div>
+    </div>
+
+    <div class="card">
+      <h2>👥 Everyone's share <small>— ${fmt(share, sym)} each</small></h2>
+      ${balances.map((b,i)=>{
+        const st = b.bal > 0.01 ? `<span class="badge get">gets back ${fmt(b.bal,sym)}</span>`
+                 : b.bal < -0.01 ? `<span class="badge owe">owes ${fmt(-b.bal,sym)}</span>`
+                 : `<span class="badge even">all square ✌️</span>`;
+        return `<div class="person">
+          <div class="avatar" style="background:${avatarColor(i)}">${initials(b.name)}</div>
+          <div class="info"><div class="n">${esc(b.name)}</div>
+          <div class="d">paid ${fmt(b.paid,sym)} · share ${fmt(share,sym)}</div></div>
+          ${st}
+        </div>`;
+      }).join("")}
+    </div>
+
+    ${settlements.length ? `<div class="card">
+      <h2>🤝 Settle up <small>— fewest transfers</small></h2>
+      ${settlements.map(s=>`<div class="settle"><b>${esc(s.from)}</b> <span class="arr">→</span> <b>${esc(s.to)}</b>&nbsp; ${fmt(s.amt,sym)}</div>`).join("")}
+    </div>` : `<div class="card center"><h2 class="mt0">🎊 Perfectly balanced, nothing to settle!</h2></div>`}
+
+    <div class="card">
+      <h2>📊 Where the money went</h2>
+      ${catArr.map((c,i)=>`<div class="bar-row">
+        <div class="bar-top"><span>${catEmoji(c.cat)} ${c.cat}</span><span>${fmt(c.v,sym)} <span class="pc">${c.pc.toFixed(0)}%</span></span></div>
+        <div class="bar"><i style="width:${c.pc}%;background:${barColors[i%barColors.length]}"></i></div>
+      </div>`).join("")}
+    </div>
+
+    <div class="card">
+      <h2>💡 Trip insights</h2>
+      ${insights.map(i=>`<div class="insight"><span class="em">✦</span><div>${i}</div></div>`).join("")}
+    </div>
+
+    <div class="card">
+      <h2>🤖 AI money coach <small>— tips for ${esc(meta.country)}</small></h2>
+      <div id="aiOut" class="hide ai-box"></div>
+      <button class="btn btn-sun" id="btnAI" onclick="askAI()">✨ Ask AI how to spend less here</button>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Free via Puter.js. A quick sign-in popup may appear the first time.</p>
+    </div>
+
+    <div class="card">
+      <h2>🧾 All expenses</h2>
+      ${expenses.map(e=>{
+        const d = new Date(e.at);
+        return `<div class="exp">
+          <div class="em">${catEmoji(e.cat)}</div>
+          <div class="info"><div class="t">${esc(e.note)}</div>
+          <div class="s">${esc(e.payer)} · ${d.toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div></div>
+          <div class="amt">${fmt(e.amt,sym)}</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
+async function askAI(){
+  if(!T || !T.meta) return;
+  const meta = T.meta;
+  const expenses = liveExpenses();
+  const {total, catArr, count} = calc(T.members, expenses);
+  const days = dayCount(meta);
+  const top5 = expenses.slice().sort((a,b)=>b.amt-a.amt).slice(0,5)
+    .map(e=>e.note + " (" + e.cat + "): " + meta.sym + e.amt).join("; ");
+  const catStr = catArr.map(c=>c.cat + ": " + meta.sym + c.v.toFixed(0) + " (" + c.pc.toFixed(0) + "%)").join(", ");
+  const prompt =
+"You are a friendly travel budget coach. A group of " + count + " travellers finished a " + days + "-day trip \"" + meta.name + "\" in " + meta.country + ". They spent " + meta.sym + total.toFixed(0) + " total (currency " + meta.ccode + ").\n" +
+"Spending by category: " + catStr + ".\n" +
+"Biggest expenses: " + top5 + ".\n\n" +
+"In under 220 words, in a warm upbeat tone:\n" +
+"1. Say whether this spend seems low/typical/high for " + meta.country + " for such a group, briefly.\n" +
+"2. Point out the category where money leaked most.\n" +
+"3. Give 5 specific practical LOCAL tips to reduce expenses in " + meta.country + " (local transport tricks, where locals eat, booking habits, bargaining norms, free things to do).\n" +
+"Plain text, short lines, simple numbering, a few emojis. No markdown headers or asterisks.";
+
+  const btn = $("btnAI"), out = $("aiOut");
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Thinking…';
+  out.classList.remove("hide"); out.textContent = "Asking the AI coach… 🤖";
+  try{
+    const r = await puter.ai.chat(prompt);
+    const txt = (typeof r === "string") ? r : (r && r.message && r.message.content) ? r.message.content : (r && r.text) ? r.text : JSON.stringify(r);
+    out.textContent = txt;
+    btn.innerHTML = "🔄 Ask again";
+  }catch(err){
+    out.textContent = "The AI coach couldn't be reached (sign-in cancelled or network hiccup). Try again anytime, the built-in insights above still have you covered! 🌤️";
+    btn.innerHTML = "✨ Ask AI how to spend less here";
+  }
+  btn.disabled = false;
+}
+
+/* ================= home & past lists ================= */
+function switchTab(t){
+  $("tabCurrent").classList.toggle("active", t==="current");
+  $("tabPast").classList.toggle("active", t==="past");
+  $("viewHome").classList.toggle("hide", t!=="current");
+  $("viewPast").classList.toggle("hide", t!=="past");
+  $("viewTrip").classList.add("hide");
+  $("mainTabs").classList.remove("hide");
+  if(t==="past") renderPastList(); else renderHomeList();
+}
+
+function fetchTripBrief(code, cb){
+  const brief = listCache[code] || {code, meta:null, _exp:{}, total:0};
+  listCache[code] = brief;
+  const root = gun.get(NS + code);
+  root.get("meta").once(m=>{ if(m && m.name){ brief.meta = m; cb(); } });
+  root.get("exp").map().once((e,k)=>{
+    if(e && !e.del && e.amt>0){
+      brief._exp[k] = e.amt;
+      brief.total = Object.values(brief._exp).reduce((s,v)=>s+v,0);
+      cb();
+    }
+  });
+}
+
+function renderHomeList(){
+  const my = myData();
+  const codes = Object.keys(my.trips);
+  const box = $("homeTrips");
+  box.innerHTML = "";
+  if(!codes.length) return;
+  const paint = ()=>{
+    const active = codes.filter(c=>listCache[c] && listCache[c].meta && !listCache[c].meta.endedAt);
+    if(!active.length){ box.innerHTML=""; return; }
+    box.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;color:var(--muted)">⛱️ Your active trips</h2>` +
+      active.map(c=>{
+        const b = listCache[c];
+        return `<div class="card trip-item" onclick="openTrip('${c}')">
+          <div class="trip-head"><span class="n">${esc(b.meta.name)}</span><span class="a">${fmt(b.total, b.meta.sym)}</span></div>
+          <div class="trip-sub">${esc(b.meta.country)} · code ${c} · you: ${esc((my.trips[c]||{}).myName||"")}</div>
+        </div>`;
+      }).join("");
+  };
+  codes.forEach(code=>fetchTripBrief(code, paint));
+  paint();
+}
+
+function renderPastList(){
+  const my = myData();
+  const codes = Object.keys(my.trips);
+  const box = $("pastList");
+  if(!codes.length){
+    box.innerHTML = `<div class="empty"><span class="em">🗺️</span><p>No past trips yet.<br>Your finished adventures will live here.</p></div>`;
+    return;
+  }
+  box.innerHTML = `<div class="empty"><span class="em">🛰️</span><p>Looking for finished trips…</p></div>`;
+  const paint = ()=>{
+    const ended = codes.filter(c=>listCache[c] && listCache[c].meta && listCache[c].meta.endedAt)
+                       .sort((a,b)=>listCache[b].meta.endedAt - listCache[a].meta.endedAt);
+    if(!ended.length) return;
+    box.innerHTML = ended.map(c=>{
+      const b = listCache[c];
+      const d = new Date(b.meta.endedAt);
+      return `<div class="card trip-item" onclick="openTrip('${c}')">
+        <div class="trip-head"><span class="n">${esc(b.meta.name)}</span><span class="a">${fmt(b.total, b.meta.sym)}</span></div>
+        <div class="trip-sub">${esc(b.meta.country)} · ${d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})} · tap for full breakdown</div>
+      </div>`;
+    }).join("");
+  };
+  codes.forEach(code=>fetchTripBrief(code, paint));
+  setTimeout(()=>{
+    const anyEnded = codes.some(c=>listCache[c] && listCache[c].meta && listCache[c].meta.endedAt);
+    if(!anyEnded) box.innerHTML = `<div class="empty"><span class="em">🗺️</span><p>No finished trips yet.<br>End a trip and it will appear here for the whole group.</p></div>`;
+  }, 6000);
+}
+
+/* ================= boot ================= */
+$("tripCountry").innerHTML = COUNTRIES.map((c,i)=>`<option value="${i}">${c[0]} (${c[2]} ${c[1]})</option>`).join("");
+const params = new URLSearchParams(location.search);
+const joinParam = (params.get("join")||"").toUpperCase();
+if(joinParam && joinParam.length===6){
+  if(myData().trips[joinParam]) openTrip(joinParam);
+  else{
+    $("joinCode").value = joinParam;
+    toast("You're invited! Enter your name to join 🎟️");
+    setTimeout(()=>{ const el=$("joinName"); if(el) el.focus(); }, 400);
+  }
+}
+renderHomeList();
+</script>
+</body>
+</html>
