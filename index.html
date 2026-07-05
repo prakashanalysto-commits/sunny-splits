@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sunny Splits · Trip Expenses, Together</title>
+<title>Trip Expenses Guide · Split Together, Live</title>
 <meta name="description" content="Split trip expenses with your group, live. Minimal, happy, free.">
 <style>
   :root{
-    --bg:#FFF9F0; --card:#FFFFFF; --ink:#3D3229; --muted:#9B8E80;
+    --bg:#1B1712; --card:#26211B; --ink:#F5EDE2; --muted:#A79683;
     --sun:#FFB84C; --coral:#FF7B54; --mint:#7ED8B2; --sky:#8EC9E8;
-    --soft:#FFF1DC; --line:#F3E8D8; --danger:#E85D5D;
-    --radius:20px; --shadow:0 4px 18px rgba(255,155,80,.10);
+    --soft:#332B22; --line:#3B3228; --danger:#FF8A8A;
+    --radius:20px; --shadow:0 4px 18px rgba(0,0,0,.30);
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
   body{background:var(--bg);color:var(--ink);min-height:100vh}
@@ -20,9 +20,9 @@
   header h1 span{color:var(--coral)}
   header p{color:var(--muted);font-size:13px;margin-top:3px}
   .live-pill{position:absolute;right:0;top:22px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--muted)}
-  .live-dot{width:8px;height:8px;border-radius:50%;background:#D9C8B4}
-  .live-pill.on{color:#2E9E6B}
-  .live-pill.on .live-dot{background:#2E9E6B;animation:pulse 1.6s infinite}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#5A4E40}
+  .live-pill.on{color:#5FD69B}
+  .live-pill.on .live-dot{background:#5FD69B;animation:pulse 1.6s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,158,107,.4)}70%{box-shadow:0 0 0 7px rgba(46,158,107,0)}100%{box-shadow:0 0 0 0 rgba(46,158,107,0)}}
 
   .tabs{display:flex;background:var(--soft);border-radius:16px;padding:5px;margin-bottom:18px}
@@ -34,7 +34,7 @@
   .card h2 small{color:var(--muted);font-weight:600;font-size:12px}
 
   label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
-  input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:15px;background:#FFFDFA;color:var(--ink);outline:none;transition:.2s}
+  input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:15px;background:#221D17;color:var(--ink);outline:none;transition:.2s}
   input:focus,select:focus{border-color:var(--sun)}
   .row{display:flex;gap:10px}.row>*{flex:1}
 
@@ -43,16 +43,16 @@
   .btn:disabled{opacity:.55;cursor:wait}
   .btn-sun{background:linear-gradient(135deg,var(--sun),var(--coral));color:#fff;box-shadow:0 6px 16px rgba(255,123,84,.3)}
   .btn-ghost{background:var(--soft);color:var(--ink)}
-  .btn-danger{background:#FFECEC;color:var(--danger)}
+  .btn-danger{background:#3A2323;color:var(--danger)}
   .btn-sm{width:auto;padding:8px 14px;font-size:13px;margin-top:0;border-radius:12px}
 
-  .code-chip{display:inline-flex;align-items:center;gap:8px;background:#FFF;border:1.5px dashed var(--coral);color:var(--coral);padding:8px 16px;border-radius:999px;font-weight:800;font-size:16px;letter-spacing:3px;cursor:pointer;margin-top:10px}
+  .code-chip{display:inline-flex;align-items:center;gap:8px;background:#221D17;border:1.5px dashed var(--coral);color:var(--coral);padding:8px 16px;border-radius:999px;font-weight:800;font-size:16px;letter-spacing:3px;cursor:pointer;margin-top:10px}
   .code-chip small{letter-spacing:0;font-size:11px;font-weight:700}
 
-  .hero{background:linear-gradient(135deg,#FFE3B3,#FFD1C1);border:none;text-align:center;padding:22px 18px}
-  .hero .place{font-size:13px;font-weight:700;color:#A96A2F;text-transform:uppercase;letter-spacing:1px}
-  .hero .amount{font-size:38px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}
-  .hero .sub{font-size:13px;color:#8A6A45;font-weight:600}
+  .hero{background:linear-gradient(135deg,#43301D,#4A2A20);border:none;text-align:center;padding:22px 18px}
+  .hero .place{font-size:13px;font-weight:700;color:#FFC98A;text-transform:uppercase;letter-spacing:1px}
+  .hero .amount{font-size:38px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px;color:#FFF6EA}
+  .hero .sub{font-size:13px;color:#E8C9A0;font-weight:600}
 
   .members-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 6px}
   .m-badge{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:58px}
@@ -62,7 +62,7 @@
   .m-badge.me .avatar{outline:3px solid var(--sun);outline-offset:2px}
 
   .cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-  .cat{padding:10px 6px;border:1.5px solid var(--line);border-radius:14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:#FFFDFA;transition:.15s}
+  .cat{padding:10px 6px;border:1.5px solid var(--line);border-radius:14px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:#221D17;transition:.15s}
   .cat .em{font-size:20px;display:block;margin-bottom:3px}
   .cat.sel{border-color:var(--sun);background:var(--soft)}
 
@@ -73,7 +73,7 @@
   .exp .t{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .exp .s{font-size:12px;color:var(--muted)}
   .exp .amt{font-weight:800;font-size:14px;white-space:nowrap}
-  .exp .del{border:none;background:none;color:#D9C8B4;font-size:16px;cursor:pointer;padding:4px}
+  .exp .del{border:none;background:none;color:#6B5B49;font-size:16px;cursor:pointer;padding:4px}
 
   .bar-row{margin-bottom:12px}
   .bar-top{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:5px}
@@ -88,8 +88,8 @@
   .person .n{font-weight:700;font-size:14px}
   .person .d{font-size:12px;color:var(--muted)}
   .badge{font-size:12px;font-weight:800;padding:5px 10px;border-radius:99px}
-  .badge.get{background:#E4F7EE;color:#2E9E6B}
-  .badge.owe{background:#FFECEC;color:var(--danger)}
+  .badge.get{background:#1E3B2D;color:#7FE0AE}
+  .badge.owe{background:#442326;color:var(--danger)}
   .badge.even{background:var(--soft);color:var(--muted)}
 
   .settle{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:14px;padding:11px 14px;margin-bottom:8px;font-size:14px;font-weight:600}
@@ -98,7 +98,7 @@
 
   .insight{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:13.5px;line-height:1.45}
   .insight .em{font-size:18px}
-  .ai-box{background:linear-gradient(135deg,#FDF3FF,#FFF3E8);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+  .ai-box{background:linear-gradient(135deg,#332745,#3B2B20);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
 
   .trip-item{cursor:pointer;transition:.15s}
   .trip-item:active{transform:scale(.98)}
@@ -124,7 +124,7 @@
   .help-body p{font-size:13.5px;line-height:1.55;margin-bottom:10px;color:var(--ink)}
   .help-body p:last-child{margin-bottom:0}
 
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;transition:.3s;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#F5EDE2;color:#241F1A;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;transition:.3s;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
   .spin{display:inline-block;width:14px;height:14px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
@@ -133,7 +133,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Sunny <span>Splits</span> ☀️</h1>
+    <h1>Trip <span>Expenses</span> Guide ✈️</h1>
     <p>happy trips, fair splits, together</p>
     <div class="live-pill" id="livePill"><span class="live-dot"></span><span id="liveTxt">offline</span></div>
   </header>
@@ -406,7 +406,7 @@ function pickCat(c){
 function copyCode(){
   if(!T || !T.meta) return;
   const link = location.origin + location.pathname + "?join=" + T.code;
-  const txt = 'Join my trip "' + T.meta.name + '" on Sunny Splits ☀️\nCode: ' + T.code + '\n' + link;
+  const txt = 'Join my trip "' + T.meta.name + '" on Trip Expenses Guide ✈️\nCode: ' + T.code + '\n' + link;
   (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
     .then(()=>toast("Invite copied! Paste it in WhatsApp 📋"))
     .catch(()=>toast("Code: " + T.code));
