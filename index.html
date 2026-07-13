@@ -220,8 +220,10 @@ const COUNTRIES = [
 const CATS = [["Food","🍜"],["Stay","🏨"],["Travel","🚕"],["Shopping","🛍️"],["Fun","🎉"],["Other","✨"]];
 const AVATAR_COLORS = ["#FF7B54","#FFB84C","#7ED8B2","#8EC9E8","#C39BD3","#F1948A","#76D7C4","#F7B7A3"];
 const RELAYS = [
+  "https://relay.peer.ooo/gun",
   "https://gun-manhattan.herokuapp.com/gun",
-  "https://peer.wallie.io/gun"
+  "https://peer.wallie.io/gun",
+  "https://gun-us.herokuapp.com/gun"
 ];
 const NS = "sunnysplits26_";
 const MYKEY = "ss26_my";
@@ -287,16 +289,17 @@ function openTrip(code){
   root.get("meta").on(m=>{
     if(!m || !T || T.code!==code) return;
     T.meta = Object.assign({}, T.meta, m);
+    delete T.meta._;
     scheduleRender();
   });
   root.get("members").map().on((m,k)=>{
     if(!T || T.code!==code) return;
-    if(m && m.name) T.members[k] = Object.assign({}, m);
+    if(m && m.name){ T.members[k] = Object.assign({}, m); delete T.members[k]._; }
     scheduleRender();
   });
   root.get("exp").map().on((e,k)=>{
     if(!T || T.code!==code) return;
-    if(e) T.exp[k] = Object.assign({}, T.exp[k], e);
+    if(e){ T.exp[k] = Object.assign({}, T.exp[k], e); delete T.exp[k]._; }
     scheduleRender();
   });
   $("viewHome").classList.add("hide");
@@ -305,7 +308,16 @@ function openTrip(code){
   $("viewTrip").classList.remove("hide");
   $("tripBody").innerHTML = `<div class="empty"><span class="em">🛰️</span><p>Syncing trip <b>${esc(code)}</b>…</p></div>`;
   setTimeout(()=>{ if(T && T.code===code && !T.meta) $("tripBody").innerHTML =
-    `<div class="empty"><span class="em">🌫️</span><p>Can't find this trip yet.<br>Check the code, or check your internet connection.</p></div>`; }, 7000);
+    `<div class="empty"><span class="em">🌫️</span><p>Can't find this trip yet.<br>Check the code, or check your internet connection.</p></div>`; }, 12000);
+  // Re-seed the network: if this is my trip, push my local copy back out so
+  // free relays that restarted relearn it.
+  setTimeout(()=>{
+    if(!T || T.code!==code || !T.meta || !myData().trips[code]) return;
+    const r = gun.get(NS + code);
+    r.get("meta").put(Object.assign({}, T.meta));
+    Object.entries(T.members).forEach(([k,v])=>r.get("members").get(k).put(Object.assign({}, v)));
+    Object.entries(T.exp).forEach(([k,v])=>r.get("exp").get(k).put(Object.assign({}, v)));
+  }, 4000);
 }
 function closeTrip(){
   T = null;
@@ -341,13 +353,18 @@ function joinTrip(){
   const me = $("joinName").value.trim();
   if(code.length !== 6){ toast("Enter the 6-character trip code"); return; }
   if(!me){ toast("Add your name 🙋"); return; }
-  $("btnJoin").disabled = true;
+  const btn = $("btnJoin");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Finding trip… up to 25s';
   let done = false;
   const root = gun.get(NS + code);
+  const metaRef = root.get("meta");
   const finish = found=>{
     if(done) return; done = true;
-    $("btnJoin").disabled = false;
-    if(!found){ toast("Trip not found. Check the code & internet 🌫️"); return; }
+    metaRef.off();
+    btn.disabled = false;
+    btn.innerHTML = "Join trip 🤝";
+    if(!found){ toast("Trip not found. Ask the creator to open the trip on their phone, then try again 🌫️"); return; }
     root.get("members").get(slug(me)).put({name: me, at: Date.now()});
     const my = myData();
     my.trips[code] = {myName: me, joined: Date.now()};
@@ -356,8 +373,8 @@ function joinTrip(){
     openTrip(code);
     toast("You're in! Welcome aboard 🤝");
   };
-  root.get("meta").once(m=>{ if(m && m.name) finish(true); });
-  setTimeout(()=>finish(false), 8000);
+  metaRef.on(m=>{ if(m && m.name) finish(true); });
+  setTimeout(()=>finish(false), 25000);
 }
 
 /* ================= expenses ================= */
